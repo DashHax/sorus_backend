@@ -11,5 +11,8 @@ module.exports = {
     Infer: {
         Threshold: 0.64
     },
-    Root: __dirname
+    Root: __dirname,
+    CORS: {
+        allowedOrigin: ["http://localhost:3000", "http://localhost:5000", "http://localhost:8887"]
+    }
 }

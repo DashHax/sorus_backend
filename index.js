@@ -3,12 +3,13 @@ const cors = require("cors");
 
 const router = require("./routes");
 const jwtKeys = require("./jwt.keys");
+const config = require("./config");
 
 const PORT = 9997;
 const app = express();
 
 app.use(cors({
-    origin: ["http://localhost:3000", "http://localhost:5000", "http://localhost:8887"]
+    origin: config.CORS.allowedOrigin
 }))
 
 jwtKeys.preloadAllKeys();

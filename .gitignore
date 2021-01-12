@@ -3,3 +3,4 @@ keys
 faces
 
 config.js
+knexfile.js

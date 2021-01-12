@@ -1,6 +1,6 @@
-node_modules
-keys
-faces
+/node_modules
+/keys
+/faces
 
 config.js
 knexfile.js

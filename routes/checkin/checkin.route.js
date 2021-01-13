@@ -190,7 +190,7 @@ route.get("/list/:token/:count?/:page?", authMiddleware, async (req, res) => {
 
         if (payload.id != req.user.info.id) return err(res, { error: "Invalid token!", l: 0});
 
-        let query = await db("checkins").innerJoin("pui_lists", "pui_lists.id", "checkins.pui").select("*").limit(count).offset(page);
+        let query = await db("checkins").innerJoin("pui_lists", "pui_lists.id", "checkins.pui").select("*").limit(count).offset(page).orderBy("checkins.checked_time", "desc");
 
         query = query.map(item => {
             return {

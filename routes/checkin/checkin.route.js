@@ -11,6 +11,16 @@ const { trace } = require("console");
 
 const route = express.Router();
 
+function getMultiplier(type) {
+    switch (type) {
+        case "days":
+            return 60 * 60 * 24;
+        break;
+        default:
+            return 1;
+    }
+}
+
 route.post("/login", async (req, res) => {
     try {
         let { pin, face } = req.body;
@@ -97,7 +107,7 @@ route.post("/submit", async (req, res) => {
         tokenPayload.rnd = Math.round(Math.random() * Number.MAX_SAFE_INTEGER);
         let newToken = jwt.sign(tokenPayload, config.JWT.accessKey);
 
-        return res.json({ status: "success", token: newToken });
+        return res.json({ status: "success", token: newToken, isBounded });
 
     } catch (error) {
         return err(res, { error: error.message });
@@ -131,6 +141,42 @@ route.get("/view/:token/:pin", async (req, res) => {
         return err(res, { error: error.message })
     }
 });
+
+route.post("/exit", async (req, res) => {
+    try {
+        let { token, pin } = req.body;
+        let payload = jwt.verify(token, config.JWT.accessKey);
+
+        if (payload.puiPIN != pin) return err(res, { error: "Invalid token!", l: 1});
+
+        let search = await db("pui_lists").where({ login_id: pin }).select("id").limit(1);
+        if (search.length == 0) return err(res, { error: "Invalid PIN!" });
+
+        let pui = search[0];
+
+        let admission = await db("admissions").where({ pui: pui.id }).select("*").limit(1);
+        if (admission.length == 0) return err(res, { error: "You have logged out!"});
+
+        let adm = admission[0];
+        let { admission_date, duration, unit } = adm;
+
+        let timeNow = new Date();
+        let timePast = new Date(admission_date);
+        let mult = getMultiplier(unit) * 1000;
+
+        let timeEnd = new Date();
+        timeEnd.setTime(timePast.getTime() + duration * mult);
+
+        let delta = timeEnd - timeNow;
+
+        if (delta > 0) return res.json({ status: "failed", message: "You have not finished your " + duration + " " + unit + " session!"});
+        faces.removeIdentity(pui.id, true);
+        return res.json({ status: "success" });
+
+    } catch (error) {
+        return err(res, { error: error.message });
+    }
+})
 
 module.exports = {
     path: '/checkin',

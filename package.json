@@ -3,6 +3,7 @@
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "fast-glob": "^3.2.4",
+    "geolocation-utils": "^1.2.3",
     "jsonwebtoken": "^8.5.1",
     "knex": "^0.21.15",
     "mysql2": "^2.2.5"

@@ -76,6 +76,8 @@ route.post("/submit", async (req, res) => {
             return parts[0] < 100 && parts[1] < 150;
         });
 
+        console.log(`id=${pui.pui_ID}, left=${l_alive.length}, right=${r_alive.length}`);
+
         if (r_alive.length == 0 && l_alive.length == 0) return err(res, { error: "Aliveness Test failed! Please try again! "});
 
         let { acc, lat: lat1, lng } = location;

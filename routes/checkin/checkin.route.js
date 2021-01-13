@@ -180,17 +180,23 @@ route.post("/exit", async (req, res) => {
     }
 });
 
-route.get("/list/:token/:count?/:page?", authMiddleware, async (req, res) => {
+route.post("/list", authMiddleware, async (req, res) => {
     try {
-        let { token } = req.params;
-        let count = req.params.count || 10;
-        let page = req.params.page || 0;
+        let { token, invalidOnly } = req.body;
+        let count = req.body.count || 10;
+        let page = req.body.page || 0;
 
         let payload = jwt.verify(token, config.JWT.accessKey);
 
         if (payload.id != req.user.info.id) return err(res, { error: "Invalid token!", l: 0});
 
-        let query = await db("checkins").innerJoin("pui_lists", "pui_lists.id", "checkins.pui").select("*").limit(count).offset(page).orderBy("checkins.checked_time", "desc");
+        let query = [];
+        
+        if (invalidOnly) {
+            query = await db("checkins").innerJoin("pui_lists", "pui_lists.id", "checkins.pui").where({ inside: 0 }).select("*").limit(count).offset(page).orderBy("checkins.checked_time", "desc");
+        } else {
+            query = await db("checkins").innerJoin("pui_lists", "pui_lists.id", "checkins.pui").select("*").limit(count).offset(page).orderBy("checkins.checked_time", "desc");
+        }
 
         query = query.map(item => {
             return {

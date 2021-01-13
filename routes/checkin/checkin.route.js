@@ -80,11 +80,11 @@ route.post("/submit", async (req, res) => {
         let r_k = Object.keys(r_h), l_k = Object.keys(l_h);
         let r_alive = r_k.filter(k => {
             let parts = k.split(":").map(p => parseInt(p));
-            return parts[0] < 300 && parts[1] < 350;
+            return parts[0] < 150 && parts[1] < 200;
         });
         let l_alive = l_k.filter(k => {
             let parts = k.split(":").map(p => parseInt(p));
-            return parts[0] < 300 && parts[1] < 350;
+            return parts[0] < 150 && parts[1] < 200;
         });
 
         console.log(`id=${pui.pui_ID}, left=${l_alive.length}, right=${r_alive.length}`);

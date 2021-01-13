@@ -9,6 +9,8 @@ const jwt = require("jsonwebtoken");
 const { insideCircle } = require("geolocation-utils");
 const { trace } = require("console");
 
+const authMiddleware = require("../auth.middleware");
+
 const route = express.Router();
 
 function getMultiplier(type) {
@@ -176,7 +178,35 @@ route.post("/exit", async (req, res) => {
     } catch (error) {
         return err(res, { error: error.message });
     }
-})
+});
+
+route.get("/list/:token/:count?/:page?", authMiddleware, async (req, res) => {
+    try {
+        let { token } = req.params;
+        let count = req.params.count || 10;
+        let page = req.params.page || 0;
+
+        let payload = jwt.verify(token, config.JWT.accessKey);
+
+        if (payload.id != req.user.info.id) return err(res, { error: "Invalid token!", l: 0});
+
+        let query = await db("checkins").innerJoin("pui_lists", "pui_lists.id", "checkins.pui").select("*").limit(count).offset(page);
+
+        query = query.map(item => {
+            return {
+                name: item.fullname,
+                checked_time: item.checked_time,
+                lat: parseFloat(item.lat),
+                long: parseFloat(item.long),
+                bounded: item.inside == 1
+            }
+        });
+
+        return res.json({status: "success", checkins: query });
+    } catch (error) {
+        return err(res, { error: error.message });
+    }
+});
 
 module.exports = {
     path: '/checkin',

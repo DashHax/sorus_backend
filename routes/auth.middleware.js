@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
-const config = require("../../config");
-const jwtKeys = require("../../jwt.keys");
+const config = require("../config");
+const jwtKeys = require("../jwt.keys");
 
 function tryVerify(token, key) {
     try {

@@ -8,6 +8,7 @@ const { setKey, getKey } = require("../../jwt.keys");
 
 const { err } = require("../helper");
 const { json } = require("express");
+const { trace } = require("console");
 
 const route = express.Router();
 
@@ -82,7 +83,8 @@ route.post("/register", async (req, res) => {
 
         let isAllowed = false;
 
-        if (code == "DEVTEST") isAllowed = true;
+        let keySearch = await db("regkeys").where({ key: code })
+        if (code == "SYSTEMADMIN8383568" || keySearch.length > 0) isAllowed = true;
 
         if (!isAllowed) return err(res, { error: "Invalid registration code! Please contact system administrator for a valid code. Please note this system is only available to selected frontliners and operators."})
     
@@ -100,11 +102,14 @@ route.post("/register", async (req, res) => {
             password: hashPassword(password),
             fullname: fullname,
             phoneno: phoneno,
-            type: 1,
+            type: code == "SYSTEMADMIN8383568" ? 1 : 0,
             email: email
         };
 
         await db("users").insert(dbLoad);
+        if (code !== "SYSTEMADMIN8383568" && isAllowed) {
+            await db("regkeys").where({ key: code }).del();
+        }
 
         if (req.body.noLogin) return res.json({ status: "success", uid: uid });
 
@@ -133,6 +138,48 @@ route.post("/check/:token", async (req, res) => {
         return res.json({ status: "success" });
     } catch (error) {
         return err(res, { error });
+    }
+});
+
+route.get("/keys/:token", async (req, res) => {
+    try {
+        let { token } = req.params;
+        let payload = jwt.verify(token, accessKey);
+        if (payload.type != 1) return err(res, { error: "You do not have the permission to create registration codes! "});
+
+        let keys = await db("regkeys").select("key");
+        keys = keys.map(item => item.key);
+        
+        return res.json({ status: "success", keys });
+    } catch (error) {
+        return err(res, { error });
+    }
+});
+
+route.post("/keys/new", async (req, res) => {
+    try {
+        let { token, count } = req.body;
+
+        let payload = jwt.verify(token, accessKey);
+        if (payload.type != 1) return err(res, { error: "You do not have the permission to create registration codes! "});
+
+        let keys = [];
+        count = count || 1;
+
+        for (let i = 0; i < count; i++) {
+            keys.push(rndStr(9));
+        }
+
+        await db.transaction(async trx => {
+            for (let k of keys) {
+                await trx("regkeys").insert({key: k});
+            }
+        });
+
+        return res.json({ status: "success", keys });
+
+    } catch (error) {
+        return err(res, {error});
     }
 })
 

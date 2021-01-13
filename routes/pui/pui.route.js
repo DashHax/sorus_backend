@@ -9,7 +9,7 @@ const { err } = require("../helper");
 
 const faceController = require("../../controllers/faces/faces.controller");
 
-const authMiddleware = require("./pui.middleware");
+const authMiddleware = require("../auth.middleware");
 
 const route = express.Router();
 

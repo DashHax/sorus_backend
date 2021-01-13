@@ -7,6 +7,7 @@ const config = require("../../config");
 const jwt = require("jsonwebtoken");
 
 const { insideCircle } = require("geolocation-utils");
+const { trace } = require("console");
 
 const route = express.Router();
 
@@ -103,8 +104,32 @@ route.post("/submit", async (req, res) => {
     }
 });
 
-route.get("/view", async (req, res) => {
+route.get("/view/:token/:pin", async (req, res) => {
+    try {
+        let { token, pin } = req.params;
+        let payload = jwt.verify(token, config.JWT.accessKey);
 
+        if (payload.puiPIN != pin) return err(res, { error: "Invalid token!", l: 1});
+
+        let search = await db("pui_lists").where({ login_id: pin }).select("id").limit(1);
+        if (search.length == 0) return err(res, { error: "Invalid PIN!" });
+        let pui = search[0];
+
+        let checkins = await db("checkins").where({ pui: pui.id }).select("*");
+
+        let result = checkins.map(chk => {
+            return {
+                time: chk.checked_time,
+                lat: parseFloat(chk.lat),
+                long: parseFloat(chk.long),
+                inbound: chk.inside == 1
+            }
+        });
+
+        return res.json({ status: "success", checkins: result });
+    } catch (error) {
+        return err(res, { error: error.message })
+    }
 });
 
 module.exports = {

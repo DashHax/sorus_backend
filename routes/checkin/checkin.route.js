@@ -63,6 +63,21 @@ route.post("/submit", async (req, res) => {
         let dist = faces.findDistance(tokenPayload.puiID, face);
         if (dist < config.Infer.Threshold) return err(res, { error: "Identity mismatch! Please try again!" });
 
+        let r_h = histograms.right,
+            l_h = histograms.left;
+
+        let r_k = Object.keys(r_h), l_k = Object.keys(l_h);
+        let r_alive = r_k.filter(k => {
+            let parts = k.split(":").map(p => parseInt(p));
+            return parts[0] < 100 && parts[1] < 150;
+        });
+        let l_alive = l_k.filter(k => {
+            let parts = k.split(":").map(p => parseInt(p));
+            return parts[0] < 100 && parts[1] < 150;
+        });
+
+        if (r_alive.length == 0 && l_alive.length == 0) return err(res, { error: "Aliveness Test failed! Please try again! "});
+
         let { acc, lat: lat1, lng } = location;
         let { lat2, long, radius } = pui;
 
@@ -84,6 +99,10 @@ route.post("/submit", async (req, res) => {
     } catch (error) {
         return err(res, { error: error.message });
     }
+});
+
+route.get("/view", async (req, res) => {
+
 });
 
 module.exports = {

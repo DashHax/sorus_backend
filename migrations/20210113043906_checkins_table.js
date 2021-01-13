@@ -8,8 +8,8 @@ exports.up = function(knex) {
   return knex.schema.createTable("checkins", table => {
       table.string("pui").notNullable();
       table.dateTime("checked_time").notNullable();
-      table.float("lat");
-      table.float("long");
+      table.string("lat");
+      table.string("long");
       table.integer("inside", 1);
   })
 };
